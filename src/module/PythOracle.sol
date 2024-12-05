@@ -56,18 +56,26 @@ contract PythOracle is Module {
 
     function encodeBytesOnUninstall() external pure returns (bytes memory) {}
 
-    function exampleMethod(bytes[] calldata priceUpdate) public payable {
+    function updatePriceFeeds(bytes[] calldata priceUpdate) public payable {
+        uint256 fee = pyth.getUpdateFee(priceUpdate);
+        pyth.updatePriceFeeds{value: fee}(priceUpdate);
+    }
+
+    /// @notice Example method to update price feeds and read the latest price from a price feed.
+    /// @dev Make sure to send priceUpdates for all priceFeedIds to get the latest price.
+    /// @param priceFeedIds The price feed IDs to update.
+    /// @param priceUpdates The price updates to submit.
+    function exampleMethod(bytes32[] calldata priceFeedIds, bytes[] calldata priceUpdates) public payable {
         // Submit a priceUpdate to the Pyth contract to update the on-chain price.
         // Updating the price requires paying the fee returned by getUpdateFee.
         // WARNING: These lines are required to ensure the getPriceNoOlderThan call below succeeds. If you remove them, transactions may fail with "0x19abf40e" error.
-        uint256 fee = pyth.getUpdateFee(priceUpdate);
-        pyth.updatePriceFeeds{value: fee}(priceUpdate);
+        uint256 fee = pyth.getUpdateFee(priceUpdates);
+        pyth.updatePriceFeeds{value: fee}(priceUpdates);
 
-        // Read the current price from a price feed if it is less than 60 seconds old.
-        // Each price feed (e.g., ETH/USD) is identified by a price feed ID.
+        // Read the latest price from a price feed if it is less than 60 seconds old.
         // The complete list of feed IDs is available at https://pyth.network/developers/price-feed-ids
-        bytes32 priceFeedId = 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace; // ETH/USD
-        PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceFeedId, 60);
+        for (uint256 i = 0; i < priceFeedIds.length; i++) {
+            PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceFeedIds[i], 60);
+        }
     }
-
 }
