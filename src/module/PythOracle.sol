@@ -28,10 +28,10 @@ library PythOracleStorage {
 
 contract PythOracle is Module {
 
-    address immutable pythContract;
+    IPyth immutable pyth;
 
     constructor(address _pythContract) {
-        pythContract = _pythContract;
+        pyth = IPyth(_pythContract);
     }
 
     function getModuleConfig() external pure override returns (ModuleConfig memory config) {
